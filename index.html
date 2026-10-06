@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xenon URL Shortener</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a0a;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 500px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    p {
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      padding: 14px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #111;
+      color: white;
+      outline: none;
+    }
+
+    button {
+      padding: 14px 18px;
+      border: none;
+      border-radius: 8px;
+      background: white;
+      color: black;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .result {
+      margin-top: 25px;
+      padding: 15px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #111;
+      display: none;
+    }
+
+    .short-url {
+      word-break: break-all;
+      margin-bottom: 12px;
+      color: #aaa;
+    }
+
+    .copy {
+      width: 100%;
+    }
+
+    .error {
+      color: #ff5555;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>Xenon URL Shortener</h1>
+    <p>Turn long URLs into short links.</p>
+
+    <div class="input-group">
+      <input
+        id="urlInput"
+        type="url"
+        placeholder="https://example.com"
+      />
+
+      <button onclick="shortenUrl()">
+        Shorten
+      </button>
+    </div>
+
+    <div id="error" class="error"></div>
+
+    <div id="result" class="result">
+      <div id="shortUrl" class="short-url"></div>
+
+      <button class="copy" onclick="copyUrl()">
+        Copy to Clipboard
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const API_URL =
+      "https://steep-union-08cb.xenon-url.workers.dev";
+
+    let generatedUrl = "";
+
+    async function shortenUrl() {
+
+      const url = document.getElementById("urlInput").value;
+      const error = document.getElementById("error");
+      const result = document.getElementById("result");
+
+      error.textContent = "";
+      result.style.display = "none";
+
+      if (!url) {
+        error.textContent = "Please enter a URL.";
+        return;
+      }
+
+      try {
+
+        const response = await fetch(`${API_URL}/links`, {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            url: url
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create short link.");
+        }
+
+        const data = await response.json();
+
+        generatedUrl = `${API_URL}/${data.code}`;
+
+        document.getElementById("shortUrl").textContent =
+          generatedUrl;
+
+        result.style.display = "block";
+
+      } catch (err) {
+
+        error.textContent = err.message;
+
+      }
+    }
+
+    async function copyUrl() {
+
+      await navigator.clipboard.writeText(generatedUrl);
+
+      const button = document.querySelector(".copy");
+
+      button.textContent = "Copied! ✓";
+
+      setTimeout(() => {
+        button.textContent = "Copy to Clipboard";
+      }, 1500);
+    }
+  </script>
+
+</body>
+</html>
